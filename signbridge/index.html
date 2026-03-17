@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignBridge | Every Gesture Has a Story</title>
+    <meta name="description" content="SignBridge translates sign language into your cloned executive voice in real-time. No interpreter delay. No lost momentum.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;700&family=Space+Mono&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Custom cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-trail"></div>
+
+    <!-- Canvas backgrounds -->
+    <canvas id="neural-mesh-canvas"></canvas>
+
+    <!-- Floating particles (CSS driven) -->
+    <div class="particles-container" id="particles"></div>
+
+    <!-- Navigation -->
+    <nav class="glass-nav">
+        <div class="logo">SignBridge</div>
+        <div class="nav-links">
+            <a href="#pipeline-demo">How it Works</a>
+            <a href="#features">Features</a>
+            <a href="#footer-cta">Join Waitlist</a>
+        </div>
+        <button class="cta-pill sm">Experience Now</button>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- HERO — FULL VIEWPORT                       -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <p class="eyebrow-tag">ACCESSIBILITY · EXECUTIVE PRESENCE · REAL-TIME AI</p>
+            <h1 class="display-title">Every Gesture<br>Has a Story.</h1>
+            <p class="subhead">SignBridge translates your sign language into <span class="text-cyan">your executive voice</span> — instantly, accurately, powerfully. No interpreter delay. No lost momentum.</p>
+            <div class="cta-row">
+                <button class="cta-primary">
+                    <span>▶&nbsp;&nbsp;Experience SignBridge</span>
+                </button>
+                <a href="#persona" class="cta-secondary">Watch Anjali's Story →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- PRODUCT PIPELINE DEMO                      -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="pipeline-section" id="pipeline-demo">
+        <p class="section-label">HOW IT WORKS — LIVE SIMULATION</p>
+        <div class="demo-container">
+            <div class="demo-top-glow"></div>
+
+            <!-- Gesture Trigger Buttons -->
+            <div class="gesture-triggers">
+                <button class="gesture-btn active" data-gesture="pitch">Strategic Pitch</button>
+                <button class="gesture-btn" data-gesture="directive">Decision Directive</button>
+                <button class="gesture-btn" data-gesture="question">Boardroom Question</button>
+                <button class="gesture-btn" data-gesture="close">Deal Close</button>
+            </div>
+
+            <!-- 4-Step Pipeline -->
+            <div class="pipeline-grid">
+                <div class="step-card" data-step="1">
+                    <span class="step-num">01</span>
+                    <div class="step-icon-circle">🤲</div>
+                    <h3 class="step-title">Gesture Input</h3>
+                    <p class="step-desc">Camera &amp; depth sensors capture your hand motion in real time</p>
+                    <span class="status-dot"></span>
+                </div>
+                <div class="arrow-track"><div class="data-packet"></div></div>
+                <div class="step-card" data-step="2">
+                    <span class="step-num">02</span>
+                    <div class="step-icon-circle">📡</div>
+                    <h3 class="step-title">Capture Layer</h3>
+                    <p class="step-desc">Skeletal landmarks &amp; motion vectors extracted at 60fps</p>
+                    <span class="status-dot"></span>
+                </div>
+                <div class="arrow-track"><div class="data-packet"></div></div>
+                <div class="step-card" data-step="3">
+                    <span class="step-num">03</span>
+                    <div class="step-icon-circle">🧠</div>
+                    <h3 class="step-title">AI Engine</h3>
+                    <p class="step-desc">Translates sign grammar → executive-tone corporate English</p>
+                    <span class="status-dot"></span>
+                </div>
+                <div class="arrow-track"><div class="data-packet"></div></div>
+                <div class="step-card" data-step="4">
+                    <span class="step-num">04</span>
+                    <div class="step-icon-circle">🔊</div>
+                    <h3 class="step-title">Voice Output</h3>
+                    <p class="step-desc">Delivered in your cloned voice, live into the meeting</p>
+                    <span class="status-dot"></span>
+                </div>
+            </div>
+
+            <!-- Metrics Row -->
+            <div class="metrics-row">
+                <div class="metric-card" data-metric="latency"><span class="metric-label">LATENCY</span><span class="metric-value cyan">—</span></div>
+                <div class="metric-card" data-metric="confidence"><span class="metric-label">CONFIDENCE</span><span class="metric-value">—</span></div>
+                <div class="metric-card" data-metric="grammar"><span class="metric-label">SIGN GRAMMAR</span><span class="metric-value violet">—</span></div>
+                <div class="metric-card" data-metric="voice"><span class="metric-label">VOICE MATCH</span><span class="metric-value skin">—</span></div>
+            </div>
+
+            <!-- Voice Output Panel -->
+            <div class="voice-output-panel">
+                <div class="voice-header">
+                    <div class="avatar-circle">AK</div>
+                    <span class="voice-name-label">ANJALI KUMAR · SENIOR PM · VOICE CLONE ACTIVE</span>
+                </div>
+                <div class="typewriter-output"><span class="tw-text"></span><span class="tw-cursor">|</span></div>
+                <canvas id="waveform-canvas" height="52"></canvas>
+                <p class="waveform-label">YOUR VOICE · YOUR AUTHORITY</p>
+            </div>
+
+            <!-- Voice Type Selector -->
+            <div class="voice-selector">
+                <button class="voice-chip active" data-voice="executive">Executive</button>
+                <button class="voice-chip" data-voice="confident">Confident</button>
+                <button class="voice-chip" data-voice="warm">Warm</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- PERSONA SPOTLIGHT                          -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="persona-spotlight" id="persona">
+        <div class="full-bleed-container">
+            <div class="portrait-container"><div class="portrait-glow"></div></div>
+            <div class="quote-card glass-panel">
+                <h3 class="mono-label accent-violet" style="margin-bottom:1rem;">Meet Anjali</h3>
+                <blockquote class="display-quote">"I don't wait for an interpreter anymore. SignBridge lets me lead the room — in my voice, on my terms."</blockquote>
+                <div class="typewriter-subtitle"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- FEATURES GRID                              -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="features" id="features">
+        <h2 class="section-title">Engineered for Leadership</h2>
+        <div class="bento-grid">
+            <div class="feature-card card-glass"><div class="f-icon">🧬</div><h3>Voice Cloning</h3><p>Sounds like you, speaks for you. Highly trained vocal profiles.</p></div>
+            <div class="feature-card card-glass"><div class="f-icon">⚡</div><h3>Zero Latency</h3><p>Real-time gesture-to-speech engine optimized for Live Meetings.</p></div>
+            <div class="feature-card card-glass"><div class="f-icon">🎯</div><h3>Corporate Grammar Engine</h3><p>Automatically shapes syntax to match executive business English.</p></div>
+            <div class="feature-card card-glass"><div class="f-icon">🔒</div><h3>Private by Design</h3><p>On-device processing. Your gestures and voice data never hit the cloud.</p></div>
+            <div class="feature-card card-glass"><div class="f-icon">🌍</div><h3>Multi-Language Sign</h3><p>Native support for ASL, BSL, ISL, with more models training.</p></div>
+            <div class="feature-card card-glass"><div class="f-icon">🧩</div><h3>Zoom + Meet Ready</h3><p>Seamless Chrome extension integration. Plug, play, lead.</p></div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- FOOTER CTA                                 -->
+    <!-- ═══════════════════════════════════════════ -->
+    <footer class="site-footer" id="footer-cta">
+        <h2 class="glowing-tagline">Your brilliance was never silent.<br>Now the world can hear it.</h2>
+        <div class="waitlist-form">
+            <input type="email" placeholder="Enter your executive email" class="glass-input">
+            <button class="cta-pill holo-btn">Join Waitlist</button>
+        </div>
+        <div class="footer-bottom mono"><p>© 2026 SignBridge. All rights reserved.</p></div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
