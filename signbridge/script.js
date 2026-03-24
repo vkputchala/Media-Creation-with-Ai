@@ -148,6 +148,232 @@ const arrows = document.querySelectorAll('.arrow-track');
 const packets = document.querySelectorAll('.data-packet');
 const metricValues = document.querySelectorAll('.metric-value');
 const twText = document.querySelector('.tw-text');
+const gestureVideo = document.getElementById('gesture-video');
+const gestureOverlayCanvas = document.getElementById('gesture-overlay-canvas');
+const gestureOverlayCtx = gestureOverlayCanvas.getContext('2d');
+const detectedGestureText = document.getElementById('detected-gesture-text');
+const detectedMappingText = document.getElementById('detected-mapping-text');
+const startCameraBtn = document.getElementById('start-camera-btn');
+const stopCameraBtn = document.getElementById('stop-camera-btn');
+
+const GESTURE_MAP = {
+    open_palm: { pipeline: 'pitch', label: 'Strategic Pitch' },
+    fist: { pipeline: 'directive', label: 'Decision Directive' },
+    peace: { pipeline: 'question', label: 'Boardroom Question' },
+    thumbs_up: { pipeline: 'close', label: 'Deal Close' }
+};
+
+let liveHands = null;
+let liveCamera = null;
+let liveStream = null;
+let liveGestureActive = false;
+let stableGestureKey = null;
+let stableGestureFrames = 0;
+let lastTriggerAt = 0;
+
+function setActiveGestureButton(gestureKey) {
+    document.querySelectorAll('.gesture-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.gesture === gestureKey);
+    });
+}
+
+function estimateGesture(landmarks) {
+    const wrist = landmarks[0];
+    const fingerDefs = [
+        { name: 'index', tip: 8, pip: 6, mcp: 5 },
+        { name: 'middle', tip: 12, pip: 10, mcp: 9 },
+        { name: 'ring', tip: 16, pip: 14, mcp: 13 },
+        { name: 'pinky', tip: 20, pip: 18, mcp: 17 }
+    ];
+
+    function dist(a, b) {
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const dz = a.z - b.z;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    function fingerExtended(def) {
+        const tip = landmarks[def.tip];
+        const pip = landmarks[def.pip];
+        const mcp = landmarks[def.mcp];
+        const wristToTip = dist(wrist, tip);
+        const wristToPip = dist(wrist, pip);
+        const verticalLift = mcp.y - tip.y;
+        return wristToTip > wristToPip * 1.15 && verticalLift > 0.02;
+    }
+
+    function thumbExtended() {
+        const thumbTip = landmarks[4];
+        const thumbIp = landmarks[3];
+        const indexMcp = landmarks[5];
+        const thumbReach = dist(thumbTip, indexMcp);
+        const thumbBend = dist(thumbIp, indexMcp);
+        return thumbReach > thumbBend * 1.15;
+    }
+
+    const indexUp = fingerExtended(fingerDefs[0]);
+    const middleUp = fingerExtended(fingerDefs[1]);
+    const ringUp = fingerExtended(fingerDefs[2]);
+    const pinkyUp = fingerExtended(fingerDefs[3]);
+    const thumbUp = thumbExtended();
+    const raisedCount = [thumbUp, indexUp, middleUp, ringUp, pinkyUp].filter(Boolean).length;
+
+    if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+        return { key: 'thumbs_up', confidence: 0.92 };
+    }
+    if (indexUp && middleUp && !ringUp && !pinkyUp && !thumbUp) {
+        return { key: 'peace', confidence: 0.9 };
+    }
+    if (!indexUp && !middleUp && !ringUp && !pinkyUp && !thumbUp) {
+        return { key: 'fist', confidence: 0.87 };
+    }
+    if (indexUp && middleUp && ringUp && pinkyUp && thumbUp) {
+        return { key: 'open_palm', confidence: 0.9 };
+    }
+
+    if (raisedCount >= 4) return { key: 'open_palm', confidence: 0.72 };
+    if (raisedCount <= 1) return { key: 'fist', confidence: 0.68 };
+    return null;
+}
+
+function updateGestureOverlaySize() {
+    if (!gestureVideo || !gestureOverlayCanvas) return;
+    const rect = gestureVideo.getBoundingClientRect();
+    gestureOverlayCanvas.width = Math.max(1, Math.floor(rect.width));
+    gestureOverlayCanvas.height = Math.max(1, Math.floor(rect.height));
+}
+
+function resetLiveDetectionUI(message) {
+    detectedGestureText.textContent = message;
+    detectedMappingText.textContent = '—';
+    gestureOverlayCtx.clearRect(0, 0, gestureOverlayCanvas.width, gestureOverlayCanvas.height);
+}
+
+function triggerFromLiveGesture(gestureKey) {
+    const mapped = GESTURE_MAP[gestureKey];
+    if (!mapped || pipelineRunning) return;
+
+    currentGesture = mapped.pipeline;
+    setActiveGestureButton(currentGesture);
+    detectedMappingText.textContent = mapped.label;
+    runPipeline();
+}
+
+function onHandsResults(results) {
+    updateGestureOverlaySize();
+    gestureOverlayCtx.save();
+    gestureOverlayCtx.clearRect(0, 0, gestureOverlayCanvas.width, gestureOverlayCanvas.height);
+
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        drawConnectors(gestureOverlayCtx, landmarks, HAND_CONNECTIONS, { color: '#00F5FF', lineWidth: 2 });
+        drawLandmarks(gestureOverlayCtx, landmarks, { color: '#8B3DFF', lineWidth: 1, radius: 3 });
+
+        const estimated = estimateGesture(landmarks);
+        if (estimated) {
+            const mapEntry = GESTURE_MAP[estimated.key];
+            detectedGestureText.textContent = `${estimated.key.replace('_', ' ').toUpperCase()} (${Math.round(estimated.confidence * 100)}%)`;
+            detectedMappingText.textContent = mapEntry.label;
+
+            if (stableGestureKey === estimated.key) {
+                stableGestureFrames += 1;
+            } else {
+                stableGestureKey = estimated.key;
+                stableGestureFrames = 1;
+            }
+
+            const now = Date.now();
+            if (stableGestureFrames >= 8 && now - lastTriggerAt > 2800) {
+                lastTriggerAt = now;
+                triggerFromLiveGesture(estimated.key);
+            }
+        } else {
+            stableGestureKey = null;
+            stableGestureFrames = 0;
+            detectedGestureText.textContent = 'Hand found, unclear gesture';
+            detectedMappingText.textContent = 'Hold a supported sign longer';
+        }
+    } else {
+        stableGestureKey = null;
+        stableGestureFrames = 0;
+        detectedGestureText.textContent = 'Show one hand to camera';
+        detectedMappingText.textContent = 'Supported: open palm, fist, peace, thumbs up';
+    }
+
+    gestureOverlayCtx.restore();
+}
+
+async function startLiveGestureDetection() {
+    if (liveGestureActive) return;
+
+    if (!window.Hands || !window.Camera || !window.drawConnectors || !window.drawLandmarks) {
+        resetLiveDetectionUI('Gesture libraries failed to load');
+        return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        resetLiveDetectionUI('Camera not supported in this browser');
+        return;
+    }
+
+    try {
+        updateGestureOverlaySize();
+        liveHands = new Hands({
+            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+        liveHands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.6,
+            minTrackingConfidence: 0.6
+        });
+        liveHands.onResults(onHandsResults);
+
+        liveCamera = new Camera(gestureVideo, {
+            onFrame: async () => {
+                if (liveHands) {
+                    await liveHands.send({ image: gestureVideo });
+                }
+            },
+            width: 960,
+            height: 540
+        });
+
+        await liveCamera.start();
+        liveStream = gestureVideo.srcObject;
+        liveGestureActive = true;
+        startCameraBtn.disabled = true;
+        stopCameraBtn.disabled = false;
+        detectedGestureText.textContent = 'Camera live. Show a gesture...';
+        detectedMappingText.textContent = '—';
+    } catch (err) {
+        console.error(err);
+        resetLiveDetectionUI('Camera permission denied or unavailable');
+        liveGestureActive = false;
+        startCameraBtn.disabled = false;
+        stopCameraBtn.disabled = true;
+    }
+}
+
+function stopLiveGestureDetection() {
+    if (liveCamera && typeof liveCamera.stop === 'function') {
+        liveCamera.stop();
+    }
+    if (liveStream && typeof liveStream.getTracks === 'function') {
+        liveStream.getTracks().forEach(track => track.stop());
+    }
+
+    liveHands = null;
+    liveCamera = null;
+    liveStream = null;
+    liveGestureActive = false;
+    stableGestureKey = null;
+    stableGestureFrames = 0;
+    startCameraBtn.disabled = false;
+    stopCameraBtn.disabled = true;
+    resetLiveDetectionUI('Camera stopped');
+}
 
 // ── Voice Chip Toggle ──
 document.querySelectorAll('.voice-chip').forEach(chip => {
@@ -168,12 +394,15 @@ document.querySelectorAll('.voice-chip').forEach(chip => {
 document.querySelectorAll('.gesture-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         if (pipelineRunning) return;
-        document.querySelectorAll('.gesture-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        setActiveGestureButton(btn.dataset.gesture);
         currentGesture = btn.dataset.gesture;
         runPipeline();
     });
 });
+
+startCameraBtn.addEventListener('click', startLiveGestureDetection);
+stopCameraBtn.addEventListener('click', stopLiveGestureDetection);
+window.addEventListener('resize', updateGestureOverlaySize);
 
 // ── Pipeline Animation ──
 function runPipeline() {
@@ -289,3 +518,8 @@ requestAnimationFrame(drawWaveform);
 
 // ── Auto-demo on page load ──
 setTimeout(() => { runPipeline(); }, 1400);
+
+// Ensure camera stream is released if user closes/reloads.
+window.addEventListener('beforeunload', () => {
+    if (liveGestureActive) stopLiveGestureDetection();
+});

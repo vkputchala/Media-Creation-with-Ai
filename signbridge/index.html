@@ -65,6 +65,33 @@
                 <button class="gesture-btn" data-gesture="close">Deal Close</button>
             </div>
 
+            <!-- Live Camera Detection -->
+            <div class="live-gesture-panel">
+                <div class="live-panel-head">
+                    <p class="live-panel-label">LIVE CAMERA GESTURE DETECTION</p>
+                    <div class="live-panel-controls">
+                        <button class="live-cam-btn" id="start-camera-btn">Start Camera</button>
+                        <button class="live-cam-btn" id="stop-camera-btn" disabled>Stop Camera</button>
+                    </div>
+                </div>
+
+                <div class="live-cam-stage">
+                    <video id="gesture-video" autoplay playsinline muted></video>
+                    <canvas id="gesture-overlay-canvas"></canvas>
+                </div>
+
+                <div class="live-result-row">
+                    <div class="live-result-card">
+                        <span class="live-result-label">DETECTED GESTURE</span>
+                        <span class="live-result-value" id="detected-gesture-text">Waiting for camera...</span>
+                    </div>
+                    <div class="live-result-card">
+                        <span class="live-result-label">MAPPED OUTPUT</span>
+                        <span class="live-result-value" id="detected-mapping-text">—</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 4-Step Pipeline -->
             <div class="pipeline-grid">
                 <div class="step-card" data-step="1">
@@ -171,6 +198,9 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
