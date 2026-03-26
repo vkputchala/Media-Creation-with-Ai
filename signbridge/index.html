@@ -68,14 +68,17 @@
             <!-- Live Camera Detection -->
             <div class="live-gesture-panel">
                 <div class="live-panel-head">
-                    <p class="live-panel-label">LIVE CAMERA GESTURE DETECTION</p>
+                    <p class="live-panel-label">LIVE CONVERSATION MODE (ASL PROTOTYPE)</p>
                     <div class="live-panel-controls">
                         <button class="live-cam-btn" id="start-camera-btn">Start Camera</button>
+                        <button class="live-cam-btn" id="start-screen-btn">Share Call Screen</button>
+                        <button class="live-cam-btn" id="upload-video-btn">Upload Sign Video</button>
+                        <input id="upload-video-input" class="sr-only-input" type="file" accept="video/*">
                         <button class="live-cam-btn" id="stop-camera-btn" disabled>Stop Camera</button>
                     </div>
                 </div>
 
-                <div class="live-cam-stage">
+                <div class="live-cam-stage mirror-input" id="live-cam-stage">
                     <video id="gesture-video" autoplay playsinline muted></video>
                     <canvas id="gesture-overlay-canvas"></canvas>
                 </div>
@@ -89,6 +92,28 @@
                         <span class="live-result-label">MAPPED OUTPUT</span>
                         <span class="live-result-value" id="detected-mapping-text">—</span>
                     </div>
+                </div>
+
+                <div class="live-conversation-controls">
+                    <button class="live-cam-btn active" id="auto-speak-btn">Auto Speak: ON</button>
+                    <button class="live-cam-btn" id="speak-transcript-btn">Speak Transcript</button>
+                    <button class="live-cam-btn" id="clear-transcript-btn">Clear Transcript</button>
+                </div>
+
+                <div class="model-loader-row">
+                    <input
+                        id="asl-model-url"
+                        class="glass-input model-url-input"
+                        placeholder="Optional: paste hosted TensorFlow.js ASL model URL (model.json)"
+                        type="url"
+                    >
+                    <button class="live-cam-btn" id="load-asl-model-btn">Load ASL Model</button>
+                </div>
+                <p class="model-status-text" id="asl-model-status">Model: heuristic ASL prototype (no custom model loaded)</p>
+
+                <div class="live-transcript-panel">
+                    <span class="live-result-label">LIVE TRANSCRIPT</span>
+                    <p class="live-transcript-text" id="live-transcript-text">Waiting for live input...</p>
                 </div>
             </div>
 
@@ -160,7 +185,10 @@
     <!-- ═══════════════════════════════════════════ -->
     <section class="persona-spotlight" id="persona">
         <div class="full-bleed-container">
-            <div class="portrait-container"><div class="portrait-glow"></div></div>
+            <div class="portrait-container">
+                <img src="assets/persona-anjali.png" alt="Anjali portrait" class="persona-image">
+                <div class="portrait-glow"></div>
+            </div>
             <div class="quote-card glass-panel">
                 <h3 class="mono-label accent-violet" style="margin-bottom:1rem;">Meet Anjali</h3>
                 <blockquote class="display-quote">"I don't wait for an interpreter anymore. SignBridge lets me lead the room — in my voice, on my terms."</blockquote>
@@ -201,6 +229,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
